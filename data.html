@@ -1,0 +1,77 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <script>
+      var a_tracker_x = [];
+      var a_tracker_y = [];
+      var a_tracker_z = [];
+      var a_x_AVG;
+      var a_y_AVG;
+      var a_z_AVG;
+      var a_x_SD;
+      var a_y_SD;
+      var a_z_SD;
+      var v_x = 0;
+      var v_y = 0;
+      var v_z = 0;
+      var sampled = false;
+
+      window.addEventListener('devicemotion', handleMotion, true);
+
+      function handleMotion(motion) {
+        var a_x = motion.acceleration.x;
+        var a_y = motion.acceleration.y;
+        var a_z = motion.acceleration.z;
+
+        if (!sampled && a_tracker_x.length < 100) {
+          a_tracker_x.push(a_x);
+          a_tracker_y.push(a_y);
+          a_tracker_z.push(a_z);
+        }
+        else if (!sampled && a_tracker_x.length == 100) {
+          sample(a_tracker_x, a_x_AVG, a_x_SD);
+          sample(a_tracker_y, a_y_AVG, a_y_SD);
+          sample(a_tracker_z, a_z_AVG, a_z_SD);
+          sampled = true;
+        }
+        else {
+          if (Math.abs(a_x-a_x_AVG)/a_x_SD > 1.5) {
+            v_x += a_x * motion.interval / 1000;
+          }
+          else {
+            v_x *= 1 / 2;
+          }
+          if (Math.abs(a_y-a_y_AVG)/a_y_SD > 1.5) {
+            v_y += a_y * motion.interval / 1000;
+          }
+          else {
+            v_y *= 1 / 2;
+          }
+          if (Math.abs(a_z-a_z_AVG)/a_z_SD > 1.5) {
+            v_z += a_z * motion.interval / 1000;
+          }
+          else {
+            v_z *= 1 / 2;
+          }
+          var v = [v_x, v_y, v_z];
+      }
+
+      function sample(set, avgvar, sdvar) {
+        sum = 0;
+        sqrsum = 0;
+        for (i = 0; i < set.length; i++) {
+          sum += set[i];
+        }
+        avgvar = sum / set.length;
+        for (i = 0; i < set.length; i++) {
+          sqrsum = Math.pow((set[i]-avgvar),2);
+        }
+        sdvar = Math.sqrt(sqrsum / set.length);
+        sdvar = Math.sqrt(Math.pow(0.125, 2) + Math.pow(a_z_SD,2));
+        console.log(sdvar, avgvar);
+      }
+    </script>
+  </body>
+</html>
