@@ -1,0 +1,148 @@
+<html>
+  <head>
+    <script type='text/javascript' src='three.js'></script>
+    <script type='text/javascript' src='vectors.js'></script>
+    <script type='text/javascript' src='OrbitControls.js'></script>
+    <script type='text/javascript' src='DeviceOrientationControls.js'></script>
+    <script type='text/javascript' src='StereoEffect.js'></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/stylesheet'>
+      html {
+        margin:0px;
+        padding:0px;
+      }
+
+      body {
+        margin:0px;
+        padding:0px;
+      }
+    </style>
+  </head>
+  <body>
+    <script type='text/javascript'>
+    var scene, camera, renderer, light;
+    var vr = {};
+    var geometry, material, mesh;
+    var alpha = 0;
+    var beta = 0;
+    var gamma = 0;
+
+    init();
+    animate();
+
+    function cube(size, x,y,z, c) {
+      geometry = new THREE.BoxGeometry( size, size, size );
+      material = new THREE.MeshLambertMaterial( { color: c, wireframe: false } );
+
+      mesh = new THREE.SkinnedMesh( geometry, material );
+      mesh.castShadow = true;
+      mesh.recieveShadow = true;
+      mesh.translateX(x);
+      mesh.translateY(y);
+      mesh.translateZ(z);
+      scene.add(mesh);
+      return(mesh)
+    }
+
+    function init() {
+
+      scene = new THREE.Scene();
+
+      camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 10000 );
+      camera.position.z = 0;
+
+      cube(200, 300, 300, 300, 0xff0000);
+      cube(200, 300, 300, -300, 0x00ff00);
+      cube(200, 300, -300, 300, 0x000000);
+      cube(200, 300, -300, -300, 0xffffff);
+      cube(200, -300, 300, 300, 0x0000ff);
+      cube(200, -300, -300, 300, 0xffff00);
+      cube(200, -300, 300, -300, 0xff00ff);
+      cube(200, -300, -300, -300, 0x00ffff);
+
+      var light = new THREE.PointLight(2000, 2);
+      light.position.set(0, 0, 0);
+      scene.add( light );
+
+      renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      document.body.appendChild(renderer.domElement);
+    }
+
+    function animate() {
+
+      requestAnimationFrame( animate );
+
+      camera.rotation.x += alpha;
+      camera.rotation.y += beta;
+      camera.rotation.z += gamma;
+
+      renderer.render( scene, camera );
+
+    }
+
+  function handleMotionEvent(event) {
+
+    alpha = event.rotationRate.alpha * Math.PI / 180;
+    gamma = event.rotationRate.gamma * Math.PI / 180;
+    beta = event.rotationRate.beta * Math.PI / 180;
+
+    // Do something awesome.
+  }
+
+  navigator.getVRDisplays().then(displays => {
+    // Filter down to devices that can present.
+    displays = displays.filter(display => display.capabilities.canPresent);
+
+    // If there are no devices available, quit out.
+    if (displays.length === 0) {
+      console.warn('No devices available able to present.');
+      return;
+    }
+
+    // Store the first display we find. A more production-ready version should
+    // allow the user to choose from their available displays.
+    vr.display = displays[0];
+    vr.display.depthNear = camera.near;
+    vr.display.depthFar = camera.far;
+  });
+
+window.addEventListener('touchend', function() {
+  vr.display.requestPresent([{
+  source: renderer.domElement
+}]);}, true);
+
+window.addEventListener( 'resize', onWindowResize, false );
+
+function onWindowResize(){
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+
+}
+
+window.addEventListener('devicemotion', handleMotionEvent, true);
+    </script>
+    <!--
+    <script type='text/javascript'>
+      window.addEventListener('devicemotion', handlemotion, true);
+      var x_z = 0;
+      var v_z = 0;
+      var accelerationvals = [];
+      function handlemotion(event) {
+        //accelerationvals.append(event.acceleration.z);
+        v_z += threshhold(event.acceleration.z) * event.interval/1000;
+        x_z += v_z * event.interval/1000;
+        document.body.innerText = 'acceleration: ' + event.acceleration.z + '\n approximate position change: ' + x_z;
+      }
+
+      function threshhold(h) {
+        return(h);
+      }
+    </script>
+  -->
+  </body>
+</html>
